@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum OrderStatus {
+  REVIEW
+  PROCESSING
+  COMPLETED
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  password  String
+  username  String
+  role      Role      @default(USER)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  messages  Message[]
+  orders    Order[]
+
+  @@index([email])
+}
+
+model Order {
+  id             Int         @id @default(autoincrement())
+  description    String
+  specifications Json
+  quantity       Int
+  status         OrderStatus @default(REVIEW)
+  userId         Int
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  chatRoom       ChatRoom?
+  user           User        @relation(fields: [userId], references: [id])
+  messages       Message[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model ChatRoom {
+  id        Int       @id @default(autoincrement())
+  orderId   Int       @unique
+  isClosed  Boolean   @default(false)
+  summary   String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  order     Order     @relation(fields: [orderId], references: [id])
+  messages  Message[] 
+
+  @@index([orderId])
+}
+
+model Message {
+  id         Int      @id @default(autoincrement())
+  content    String
+  chatRoomId Int
+  userId     Int
+  orderId    Int?
+  createdAt  DateTime @default(now())
+  chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)  
+  user       User     @relation(fields: [userId], references: [id])
+  order      Order?    @relation(fields: [orderId], references: [id]) // Define relation to Order
+
+  @@index([chatRoomId])
+  @@index([userId])
+  @@index([orderId]) 
+}

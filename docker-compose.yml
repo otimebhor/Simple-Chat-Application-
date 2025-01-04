@@ -1,0 +1,11 @@
+services:
+  test-db:
+    image: postgres:13
+    # restart: always
+    # container_name: integration-tests-prisma
+    ports:
+      - '5433:5432'
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: edosa
+      POSTGRES_DB: test_db
